@@ -50,8 +50,9 @@ print ('\n-----\n'.join(tokenizer.tokenize(data)))'''
 
 fp = open("C:/Users/Ola1/Desktop/tekst.txt")
 data = fp.read()
-data.replace("\n", " ")
 data = data.strip()
+data = data.replace('\n', '')
+data = data.replace('\r', '')
 print (data)
 import re
 tekst = re.split("(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s", data)
