@@ -1,0 +1,7 @@
+camera, photo
+battery
+screen, resolution, display, colour, color
+cpu, processor, speed
+
+1 - negatywne ???
+3 - pozytywne ?
