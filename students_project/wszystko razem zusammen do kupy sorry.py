@@ -70,16 +70,16 @@ def sentiment_classification(X, y, n_folds=10, classifier=None):
         predicted = clf.predict(screenDataX)
         for i in range(0, len(predicted)-1):
             print (screenData[i], predicted[i], "\n")
-        scMean = np.mean(predicted)*33.333
+        scMean = (np.mean(predicted)-1)*50
         
         predicted = clf.predict(cameraDataX)
-        cmMean = np.mean(predicted)*33.333
+        cmMean = (np.mean(predicted)-1)*50
         predicted = clf.predict(batteryDataX)
-        btMean = np.mean(predicted)*33.333
+        btMean = (np.mean(predicted)-1)*50
         predicted = clf.predict(cpuDataX)
-        cpuMean = np.mean(predicted)*33.333
+        cpuMean = (np.mean(predicted)-1)*50
         predicted = clf.predict(allDataX)
-        allMean = np.mean(predicted)*33.333
+        allMean = (np.mean(predicted)-1)*50
         
         x = np.array([0,1,2,3,4])
         y = np.array([cmMean, scMean, btMean, cpuMean, allMean])
