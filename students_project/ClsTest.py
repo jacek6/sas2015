@@ -1,9 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import os
-import sys, inspect
-import pprint
+import sys
+import inspect
 
 import pandas
 from sklearn import metrics, cross_validation
@@ -12,8 +11,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 class ClsTest:
     """
-    Different classifiers efficiency tester.
-    """
+	Different classifiers efficiency tester.
+	"""
     def vectorize(self, docs, ngramRange=(1,2)):
         """
         Convert a collection of text documents to a matrix of token counts.
@@ -53,11 +52,8 @@ class ClsTest:
 ##
 
 if __name__ == "__main__":
-    # For notebook:
-    #cwd = os.getcwd()
-    # For file:
     cwd = os.path.dirname(os.path.realpath(__file__))
-    data = pandas.read_csv(os.path.join(cwd, 'data', 'SemEval-2014.csv'), index_col=0)
+    data = pandas.read_csv(os.path.join(cwd, '../data', 'SemEval-2014.csv'), index_col=0)
     docs = data['document'] 
     y = data['sentiment']
     
@@ -75,5 +71,5 @@ if __name__ == "__main__":
     for cls in classifiers:
         cls = "linear_model." + cls
         results = clsTest.classifySentiment( X=X, y=y, n_folds=4, classifier=eval(cls)() )
-        print( "Classifier: '%s' - Result[acc] = %s" % (cls.replace("linear_model.",""), str(results['acc'][0]) ) )
+        print "Classifier: '%s' - Result[acc] = %s" % (cls.replace("linear_model.",""), str(results['acc'][0]) )
 ##
