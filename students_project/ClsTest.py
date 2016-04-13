@@ -57,7 +57,7 @@ if __name__ == "__main__":
     #cwd = os.getcwd()
     # For file:
     cwd = os.path.dirname(os.path.realpath(__file__))
-    data = pandas.read_csv(os.path.join(cwd, 'data', 'SemEval-2014.csv'), index_col=0)
+    data = pandas.read_csv(os.path.join(cwd, '../data', 'SemEval-2014.csv'), index_col=0)
     docs = data['document'] 
     y = data['sentiment']
     

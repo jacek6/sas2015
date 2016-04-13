@@ -25,6 +25,16 @@ class SimpleDataWriter:
         self.docs_to_file(docs, 'data/%s' % self.filename)
         return
 
+class ProsConsWriter(SimpleDataWriter):
+    filename = "pros_cons_data.txt"
+
+    def write_to_file(self, ratingDoc, file):
+        for p in ratingDoc.ps:
+            file.write(p.replace('\n', ' '))
+        file.write('\t')
+        file.write(ratingDoc.rating)
+        file.write('\n')
+        return
 
 writers = [SimpleDataWriter()]
 
@@ -39,3 +49,6 @@ def gen_txt_files(phoneCodesFile = 'phonesCodes.txt', writers=[SimpleDataWriter(
                 writer.feed_docs(docs)
 
 gen_txt_files(phoneCodesFile, writers, printDoing)
+print ''
+print ''
+print "everything done fine"
