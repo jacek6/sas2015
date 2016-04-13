@@ -45,6 +45,7 @@ class FeatureRating:
     def __repr__(self):
         return self.__str__()
 
+
 class RatingDoc:
     title = ''
     rating = ''
@@ -58,10 +59,10 @@ class RatingDoc:
     def __init__(self, div=None):
         if not div: return
         self.title = self.toText(div.find("h3", {"class" : "clear"}))
-        self.mark = self.toText(div.find("span", {"class" : "s_rating_overal"}))
+        self.rating = self.toText(div.find("span", {"class" : "s_rating_overal"}))
         self.pros = self.ulToLis(div.find("ul", {"class" : "s_pros_list"}))
         self.cons = self.ulToLis(div.find("ul", {"class" : "s_cons_list"}))
-        self.ps = [p.getText().encode('utf-8') for p in div.findAll("p")]
+        self.ps = [p.getText().encode('utf-8') for p in div.findAll("p", {"class": "s_desc"})]
 
         self.featuresRatings = []
         for featureDiv in div.findAll("div", { "class" : "s_category_overal left" }):
