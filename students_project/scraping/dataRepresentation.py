@@ -61,7 +61,7 @@ class RatingDoc:
         self.mark = self.toText(div.find("span", {"class" : "s_rating_overal"}))
         self.pros = self.ulToLis(div.find("ul", {"class" : "s_pros_list"}))
         self.cons = self.ulToLis(div.find("ul", {"class" : "s_cons_list"}))
-        self.ps = [p.getText() for p in div.findAll("p")]
+        self.ps = [p.getText().encode('utf-8') for p in div.findAll("p")]
 
         self.featuresRatings = []
         for featureDiv in div.findAll("div", { "class" : "s_category_overal left" }):
