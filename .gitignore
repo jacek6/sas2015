@@ -4,3 +4,4 @@
 students_project/*.pyc
 students_project/*.pyc
 students_project/scraping/*.pyc
+*.txt -crlf
