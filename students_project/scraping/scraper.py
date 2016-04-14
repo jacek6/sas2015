@@ -18,7 +18,7 @@ class SimpleDataWriter:
         return
 
     def docs_to_file(self, docs, filename):
-        with open(filename, 'wb') as file:
+        with open(filename, 'ab') as file:
             for doc in docs:
                 self.write_to_file(doc, file)
         return
