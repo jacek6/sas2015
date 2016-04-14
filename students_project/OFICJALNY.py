@@ -8,9 +8,9 @@ import re
 import numpy as np
 import matplotlib.pyplot as plt
 
-#1. Wyswietlic pod wykresami Accuracy, F1-measure, Predicted. Uœrednic wyniki. - Ola
-#2. Sczytaæ dane ze strony http://www.phonearena.com/phones/. Najlepiej, jakby iterowa³o po wszystkich telefonach z opiniami. Zapisac do pliku w formacie zdanie-ocena.
-#   Oceny mozna troche poroznic, bo wszyscy daja 7 na 10 w górê ;d - Jacek, Ola
+#1. Wyswietlic pod wykresami Accuracy, F1-measure, Predicted. UÅ›rednic wyniki. - Ola
+#2. SczytaÄ‡ dane ze strony http://www.phonearena.com/phones/. Najlepiej, jakby iterowaÅ‚o po wszystkich telefonach z opiniami. Zapisac do pliku w formacie zdanie-ocena.
+#   Oceny mozna troche poroznic, bo wszyscy daja 7 na 10 w gÃ³rÄ™ ;d - Jacek, Ola
 #3. Wykorzystac biblioteke spaCy.
 #4. Usunac rzadko uzywane slowa.
 #5. Jak juz danych bedzie duzo i wszystko bedzie dzialac, to mozna wykorzystac singular value decomposition - kompresja.
@@ -23,7 +23,7 @@ tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')'''
 notebook_path = 'C:/Users/Ola1/Desktop/zmitad_project/'
 test_data_path = "C:/Users/Ola1/Desktop/zmitad_project/tekst.txt"
 amazon_labels_path = 'C:/Users/Ola1/Desktop/zmitad_project/sentiment labelled sentences/amazon_cells_labelled.txt'
-scraped_phonearena = "C:/Users/Ola1/Desktop/zmitad_project/scraped_data.txt"
+scraped_phonearena = "C:/Users/Ola1/Desktop/zmitad_project/scraped data.txt"
 
 allData = []
 cameraData = []
@@ -37,8 +37,11 @@ batteryDataX = []
 screenDataX = []
 cpuDataX = []
 
+# optymalizacje
+countVec_min_df = 1
+
 def read_twitter_data(notebook_path):
-    count_vect = CountVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english')
+    count_vect = CountVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english', min_df = countVec_min_df)
     data = pd.read_csv(path.join(notebook_path, 'SemEval-2014.csv'), index_col=0)
     docs = data['document'] 
     y = data['sentiment'] # standart name for labels/classes variable 
@@ -46,21 +49,22 @@ def read_twitter_data(notebook_path):
     return count_vect, X, y
 
 def read_structured_data(labels_path):
-    count_vect = CountVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english')
+    count_vect = CountVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english', min_df = countVec_min_df)
     docs = []
     y = []
-    with open(amazon_labels_path) as f:
+    with open(labels_path) as f:
         for line in f:
             line = line.strip()
-            sentim = line[len(line)-1]
-            try:
-                sen = int(sentim)
-                if sen < 2 and sen > -1:
-                    y.append(sen)
-                    line = line[:-1].strip()
-                    docs.append(line)
-            except:
-                pass
+            if len(line) > 7:
+                sentim = line[len(line)-1]
+                try:
+                    sen = int(sentim)
+                    if sen < 11 and sen > -1:
+                        y.append(sen)
+                        line = line[:-1].strip()
+                        docs.append(line)
+                except:
+                    pass
     Y = np.array(y)
     X = count_vect.fit_transform(docs)
     return count_vect, X, Y
