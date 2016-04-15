@@ -1,12 +1,15 @@
 from os import path
 import pandas as pd
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn import metrics, cross_validation
-from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import *
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import warnings
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore",category=DeprecationWarning)
+    from sklearn.feature_extraction.text import CountVectorizer
+    from sklearn import metrics, cross_validation
+    from sklearn.linear_model import *
 
 #1. Wyswietlic pod wykresami Accuracy, F1-measure, Predicted. Uśrednic wyniki. - Ola
 #2. Sczytać dane ze strony http://www.phonearena.com/phones/. Najlepiej, jakby iterowało po wszystkich telefonach z opiniami. Zapisac do pliku w formacie zdanie-ocena.
@@ -20,10 +23,12 @@ import matplotlib.pyplot as plt
 nltk.download('punkt')
 tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')'''
 
+# learning data
 notebook_path = 'C:/Users/Ola1/Desktop/zmitad_project/'
-test_data_path = "C:/Users/Ola1/Desktop/zmitad_project/tekst.txt"
 amazon_labels_path = 'C:/Users/Ola1/Desktop/zmitad_project/sentiment labelled sentences/amazon_cells_labelled.txt'
 scraped_phonearena = "C:/Users/Ola1/Desktop/zmitad_project/scraped data.txt"
+# tests data
+test_data_path = "C:/Users/Ola1/Desktop/zmitad_project/tekst.txt"
 
 allData = []
 cameraData = []
@@ -43,8 +48,8 @@ countVec_min_df = 1
 def read_twitter_data(notebook_path):
     count_vect = CountVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english', min_df = countVec_min_df)
     data = pd.read_csv(path.join(notebook_path, 'SemEval-2014.csv'), index_col=0)
-    docs = data['document'] 
-    y = data['sentiment'] # standart name for labels/classes variable 
+    docs = data['document']
+    y = data['sentiment'] # standart name for labels/classes variable
     X = count_vect.fit_transform(docs)
     return count_vect, X, y
 
@@ -59,16 +64,22 @@ def read_structured_data(labels_path):
                 sentim = line[len(line)-1]
                 try:
                     sen = int(sentim)
+                    line = line[:-1].strip()
+                    try:
+                        sen_ = int(line[len(line)-1])
+                        sen += sen_ * 10
+                        line = line[:-1].strip()
+                    except:
+                        pass
                     if sen < 11 and sen > -1:
                         y.append(sen)
-                        line = line[:-1].strip()
                         docs.append(line)
                 except:
                     pass
     Y = np.array(y)
     X = count_vect.fit_transform(docs)
     return count_vect, X, Y
-    
+
 def read_test_data(test_data_path):
     global allData, cameraData, batteryData, screenData, cpuData
     fp = open(test_data_path)
@@ -77,11 +88,11 @@ def read_test_data(test_data_path):
     #allData = tokenizer.tokenize(data)
     data = data.replace("\n", " ")
     allData = re.split("(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s|[.!?](?!\s)(?!\d)(?![g])", data)
-    
+
     for sentence in list(allData):
         if len(sentence) < 10:
             allData.remove(sentence)
-        else:       
+        else:
             if "CAMERA" in sentence.upper() or "PHOTO" in sentence.upper():
                 cameraData.append(sentence)
             if "BATTERY" in sentence.upper():
@@ -92,14 +103,14 @@ def read_test_data(test_data_path):
                 cpuData.append(sentence)
 
 def transform_test_data(count_vect):
-    newVec = CountVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english', vocabulary=count_vect.vocabulary_)        
+    newVec = CountVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english', vocabulary=count_vect.vocabulary_)
     allDataX = newVec.fit_transform(allData)
     cameraDataX = newVec.fit_transform(cameraData)
     batteryDataX = newVec.fit_transform(batteryData)
     screenDataX = newVec.fit_transform(screenData)
     cpuDataX = newVec.fit_transform(cpuData)
     return allDataX, cameraDataX, batteryDataX, screenDataX, cpuDataX
-    
+
 def sentiment_classification_learning(X, y, n_folds=10, classifier=None):
         """
         Counting sentiment with cross validation - supervised method
@@ -114,9 +125,9 @@ def sentiment_classification_learning(X, y, n_folds=10, classifier=None):
         for train_index, test_index in kf:
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
-            ######################## Most important part ########################## 
-            clf = classifier.fit(X_train, y_train) # train the classifier 
-            predicted = clf.predict(X_test) # predict test the classifier 
+            ######################## Most important part ##########################
+            clf = classifier.fit(X_train, y_train) # train the classifier
+            predicted = clf.predict(X_test) # predict test the classifier
             #######################################################################
 
             results['acc'].append(metrics.accuracy_score(y_test, predicted))
@@ -124,7 +135,7 @@ def sentiment_classification_learning(X, y, n_folds=10, classifier=None):
             results['rec'].append(metrics.recall_score(y_test, predicted, average='weighted'))
             results['f1'].append(metrics.f1_score(y_test, predicted, average='weighted'))
             results['cm'].append(metrics.confusion_matrix(y_test, predicted))
-        
+
         #print ('Accuracy: %s, F1-measure: %s, Predicted: %s' % (np.mean(results['acc']), np.mean(results['f1']), np.mean(results['prec'])))
         metricss = [np.mean(results['acc']), np.mean(results['f1']), np.mean(results['prec'])]
         return clf, metricss
@@ -139,15 +150,15 @@ def sentiment_classification_testing(clf, data_type):
         minus = 1
         multiplier = 50
     elif data_type == 'phonearena':
-        minus = 0
-        multiplier = 10
-    
+        minus = 1
+        multiplier = 100/9
+
     predicted = clf.predict(screenDataX)
-    scMean = (np.mean(predicted)-minus)*multiplier    
+    scMean = (np.mean(predicted)-minus)*multiplier
     predicted = clf.predict(cameraDataX)
     cmMean = (np.mean(predicted)-minus)*multiplier
     predicted = clf.predict(batteryDataX)
-    btMean = (np.mean(predicted)-minus)*multiplier       
+    btMean = (np.mean(predicted)-minus)*multiplier
     predicted = clf.predict(cpuDataX)
     cpuMean = (np.mean(predicted)-minus)*multiplier
     predicted = clf.predict(allDataX)
@@ -155,7 +166,7 @@ def sentiment_classification_testing(clf, data_type):
 
     #for i in range(0, len(predicted)-1):
         #print (allData[i], predicted[i], "\n")
-        
+
     y = np.array([cmMean, scMean, btMean, cpuMean, allMean])
     return y
 
@@ -167,7 +178,7 @@ def plot_prep(ys, titles, metricss):
     plt.setp(axes, xticks = x, xticklabels = my_xticks) #yticks=[0, 20, 40, 60, 80, 100]
     fig.subplots_adjust(wspace=0.4)
     print (type(fig))
-    
+
     i = 0
     for ax in axes:
         ax.set_xlabel('Kategoria'+'\n'+'Accuracy: %s, F1-measure: %s, Predicted: %s' % (round(metricss[i][0], 3), round(metricss[i][1], 3), round(metricss[i][2], 3)))
@@ -215,14 +226,14 @@ for i in range(0, numOfIters):
     y1 = sentiment_classification_testing(clf, 'amazon')
     ys_a.append(y1)
     metricss_a.append(metricss_)
-    
+
     clf, metricss_ = sentiment_classification_learning(X_t, Y_t, n_folds=4, classifier=LogisticRegression())
     allDataX, cameraDataX, batteryDataX, screenDataX, cpuDataX = allDataX_t, cameraDataX_t, batteryDataX_t, screenDataX_t, cpuDataX_t
     y2 = sentiment_classification_testing(clf, 'twitter')
     ys_t.append(y2)
     metricss_t.append(metricss_)
-    
-    clf, metricss_ = sentiment_classification_learning(X_ph, Y_ph, n_folds=4, classifier=LogisticRegression())
+
+    clf, metricss_ = sentiment_classification_learning(X_ph, Y_ph, n_folds=6, classifier=LogisticRegression())
     allDataX, cameraDataX, batteryDataX, screenDataX, cpuDataX = allDataX_ph, cameraDataX_ph, batteryDataX_ph, screenDataX_ph, cpuDataX_ph
     y3 = sentiment_classification_testing(clf, 'phonearena')
     ys_ph.append(y3)
