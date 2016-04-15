@@ -45,8 +45,8 @@ def sentiment_classification(X, y, n_folds=10, classifier=None, printing=False):
 
 # z tym dziala:
 results = sentiment_classification(X, y, n_folds=4, classifier=LogisticRegression())
-# z tym nie dziala:
-results = sentiment_classification(X[1:100], y[1:100], n_folds=4, classifier=LogisticRegression())
+# z tym juz nie dziala:
+results = sentiment_classification(X[1:100], np.array(y[1:100]), n_folds=4, classifier=LogisticRegression())
 
 
 print 'Accuracy: %s' % np.mean(results['acc'])
