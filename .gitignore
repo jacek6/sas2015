@@ -2,3 +2,6 @@
 *.npy
 .ipynb_checkpoints/
 students_project/*.pyc
+/.project
+/.pydevproject
+/.settings/
