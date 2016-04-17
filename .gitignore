@@ -2,6 +2,7 @@
 *.npy
 .ipynb_checkpoints/
 students_project/*.pyc
+students_project/_tests/*.pyc
 students_project/scraping/*.pyc
 *.txt -crlf
 .project
