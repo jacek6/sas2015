@@ -34,7 +34,7 @@ class DataStats():
                 else:
                     self._mBroken[DataStats.REASON][reason] += 1
                 continue
-            if not isinstance(sentence[1], (int, long, float)):
+            if not isinstance(sentence[1], (int, float)):
                 reason = 'Rating is not numeric.'
                 self._mBroken[DataStats.AMOUNT] += 1
                 if reason not in self._mBroken[DataStats.REASON]:
