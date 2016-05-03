@@ -2,6 +2,8 @@ from bs4 import BeautifulSoup
 import urllib
 import re
 
+#import scrapy
+
 class RatingDocUsable:
 
     factor = 0.0
@@ -47,6 +49,7 @@ class FeatureRating:
 
 
 class RatingDoc:
+    url = ''
     title = ''
     rating = ''
     pros = ['']
@@ -56,7 +59,8 @@ class RatingDoc:
     ratingDocUsable = RatingDocUsable()
 
 
-    def __init__(self, div=None):
+    def __init__(self, div=None, url = ''):
+        self.url = url
         if not div: return
         self.title = self.toText(div.find("h3", {"class" : "clear"}))
         self.rating = self.toText(div.find("span", {"class" : "s_rating_overal"}))
