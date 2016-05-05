@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import sparse
 import math
+import random
 import warnings
 
 with warnings.catch_warnings():
@@ -89,10 +90,16 @@ def read_structured_data(labels_path):
     X = count_vect.fit_transform(docs)
     return count_vect, X, Y
 
-def read_data_with_normalization(pathWithTypeOfData, return_count_vect = True):
+def read_data_with_normalization(pathWithTypeOfData, return_count_vect = True, return_stats=False):
     count_vect = CountVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english', min_df = countVec_min_df)
     docs = []
     y = []
+    positive_counter = 0
+    negative_counter = 0
+    neutral_counter = 0
+    positive_counter_all = 0
+    negative_counter_all = 0
+    neutral_counter_all = 0
     for path in pathWithTypeOfData:
         if path[1] == 'twitter':
             data = pd.read_csv(path[0], index_col=0)
@@ -120,25 +127,37 @@ def read_data_with_normalization(pathWithTypeOfData, return_count_vect = True):
                                 if path[1] == 'phonearena':
                                     # sen = math.log(sen, 2.154) - 1
                                     if sen >= 8:
+                                        positive_counter += 1
                                         sen = 2
                                     elif sen >=4:
                                         sen = 1
+                                        neutral_counter += 1
                                     else:
                                         sen = 0
+                                        negative_counter += 1
                                 else:
                                     # nie ma wartosci neutrealnych dla labelek z amazona, imdb, yelp
                                     if sen == 1:
                                         sen += 1
+                                        positive_counter_all += 1
+                                    else:
+                                        negative_counter_all += 1
                                 y.append(sen)
                                 docs.append(line)
                         except:
                             pass
-        Y = np.array(y)
-        X = count_vect.fit_transform(docs)
+    Y = np.array(y)
+    print ("Liczba pozytywnych, neutrealnych i negatywnych zdan dla phonearena: ", positive_counter, ' ', neutral_counter, ' ', negative_counter)
+    print("Liczba pozytywnych, neutrealnych i negatywnych zdan dla wszystkich danych: ", positive_counter_all+positive_counter, ' ', neutral_counter, ' ', negative_counter_all+negative_counter)
     if return_count_vect:
+        X = count_vect.fit_transform(docs)
         return count_vect, X, Y
     else:
-        return docs, Y
+        if return_stats:
+            stats = [positive_counter_all+positive_counter, neutral_counter, negative_counter_all+negative_counter]
+            return stats, docs, Y
+        else:
+            return docs, Y
 
 def read_test_data(test_data_path):
     global allData, cameraData, batteryData, screenData, cpuData
@@ -290,7 +309,8 @@ def plot_prep(ys, titles, metricss=None):
     print (type(fig))
 
     i = 0
-    # jakby cos sie sypalo, to wywalic tego ifa
+    # jakby cos sie sypalo, to wywalic tego ifa i tego lima
+    plt.ylim([0, 100])
     if len(ys) > 1:
         for ax in axes:
             if  metricss is not None:
@@ -410,7 +430,7 @@ def twoStageClassification():
     read_test_data(test_data_path)
 
     files = [[amazon_labels_path, data_types[1]], [imdb_labels_path, data_types[2]], [yelp_labels_path, data_types[3]], [scraped_phonearena_ALL, data_types[0]]]
-    docs, Y = read_data_with_normalization(files, return_count_vect=False)
+    stats, docs, Y = read_data_with_normalization(files, return_count_vect=False, return_stats=True)
 
     # split data for two stages
     Xdocs1 = []
@@ -424,6 +444,11 @@ def twoStageClassification():
     screenDataYresults = []
     cpuDataYresults = []
 
+    # II. etap
+    pos_to_neg_equalization = int(stats[2] / stats[0] * 100)
+    # I. etap
+    pos_to_neut_equalization = int(stats[1] * 2 / stats[0] * 100)
+    neg_to_neut_equalization = int(stats[1] * 2 / stats[2] * 100)
 
     if len(docs) != len(Y):
         print ("BLAD!!! Cos przy wczytywaniu danych poszlo nie tak. Metoda: read_data_with_normalization().")
@@ -432,18 +457,56 @@ def twoStageClassification():
             if Y[i] == 0 or Y[i] == 2:
                 # zamiast 2 wstawiam 1, bo sie klasyfikator wywala, a potem znowu konwertuje na 2...
                 if Y[i] == 2:
-                    Y2.append(Y[i]-1)
+                    if random.randint(0, 100) < pos_to_neg_equalization:
+                        Y2.append(Y[i]-1)
+                        Xdocs2.append(docs[i])
+                    if random.randint(0, 100) < pos_to_neut_equalization:
+                        # [0, 2]=0
+                        Y1.append(0)
+                        Xdocs1.append(docs[i])
                 else:
                     Y2.append(Y[i])
-                Xdocs2.append(docs[i])
-                # [0, 2]=0
-                Y1.append(0)
-                Xdocs1.append(docs[i])
+                    Xdocs2.append(docs[i])
+                    if random.randint(0, 100) < neg_to_neut_equalization:
+                        # [0, 2]=0
+                        Y1.append(0)
+                        Xdocs1.append(docs[i])
             elif Y[i] == 1:
                 Y1.append(1)
                 Xdocs1.append(docs[i])
             else:
                 print("Blad!!! Niepoprawna ocena (", Y[i], ") zdania: ", docs[i])
+
+    # if len(docs) != len(Y):
+    #     print("BLAD!!! Cos przy wczytywaniu danych poszlo nie tak. Metoda: read_data_with_normalization().")
+    # else:
+    #     for i in range(0, len(docs)):
+    #         if Y[i] == 0 or Y[i] == 2:
+    #             # zamiast 2 wstawiam 1, bo sie klasyfikator wywala, a potem znowu konwertuje na 2...
+    #             if Y[i] == 2:
+    #                 Y2.append(Y[i] - 1)
+    #             else:
+    #                 Y2.append(Y[i])
+    #             Xdocs2.append(docs[i])
+    #             # [0, 2]=0
+    #             Y1.append(0)
+    #             Xdocs1.append(docs[i])
+    #         elif Y[i] == 1:
+    #             Y1.append(1)
+    #             Xdocs1.append(docs[i])
+    #         else:
+    #             print("Blad!!! Niepoprawna ocena (", Y[i], ") zdania: ", docs[i])
+    # # wyrownanie liczby pozytywnych i negatywnych danych uczacych dla etapu drugiego tylko i wylacznie -> Xdocs2, Y2
+    # diff = stats[0]-stats[2]
+    # for iter in range(0, diff):
+    #     change = False
+    #     while not change:
+    #         r = random.randint(0, len(Y2)-1)
+    #         if Y2[r] == 1:
+    #             del Y2[r]
+    #             del Xdocs2[r]
+    #             change = True
+
 
         # etap I.
         count_vect = CountVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english', min_df=countVec_min_df)
@@ -451,7 +514,7 @@ def twoStageClassification():
 
         allDataX1, cameraDataX1, batteryDataX1, screenDataX1, cpuDataX1 = transform_test_data(count_vect)
 
-        print ("Etap pierwszy. Dlugosc danych uczacych: ", X1.getnnz())
+        print ("Etap pierwszy. Dlugosc danych uczacych: ", X1.shape[0])
         clf, metricss_ = sentiment_classification_learning(X1, np.array(Y1), n_folds=15, classifier=LogisticRegression())
         print ('Accuracy: %s, F1-measure: %s, Predicted: %s' % (round(metricss_[0], 3), round(metricss_[1], 3), round(metricss_[2], 3)))
 
@@ -497,7 +560,7 @@ def twoStageClassification():
         # globalne zmienne allData itp. zostaly juz zaktualizowane
         allDataX2, cameraDataX2, batteryDataX2, screenDataX2, cpuDataX2 = transform_test_data(count_vect)
 
-        print("Etap drugi. Dlugosc danych uczacych: ", X2.getnnz())
+        print("Etap drugi. Dlugosc danych uczacych: ", X2.shape[0])
         clf, metricss_ = sentiment_classification_learning(X2, np.array(Y2), n_folds=15, classifier=LogisticRegression())
         print('Accuracy: %s, F1-measure: %s, Predicted: %s' % (round(metricss_[0], 3), round(metricss_[1], 3), round(metricss_[2], 3)))
 
@@ -515,8 +578,11 @@ def twoStageClassification():
         screenDataYresults += [x*2 for x in screenDataY2.tolist()]
         cpuDataYresults += [x*2 for x in cpuDataY2.tolist()]
 
-        plot_prep([[np.mean(allDataYresults)*50, np.mean(cameraDataYresults)*50, np.mean(batteryDataYresults)*50, np.mean(screenDataYresults)*50, np.mean(cpuDataYresults)*50]], ["Phonearena, imdb, amazon, yelp"])
+        plot_prep([[np.mean(cameraDataYresults)*50, np.mean(screenDataYresults)*50, np.mean(batteryDataYresults)*50, np.mean(cpuDataYresults)*50, np.mean(allDataYresults)*50]], ["Phonearena, imdb, amazon, yelp"])
 
 
 if __name__ == '__main__':
     twoStageClassification()
+
+
+
