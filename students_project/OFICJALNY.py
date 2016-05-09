@@ -55,6 +55,8 @@ countVec_min_df = 1
 pca_ = True
 svdOpt = 10
 
+# file: read_data.py
+
 def read_twitter_data(notebook_path):
     count_vect = CountVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english', min_df = countVec_min_df)
     data = pd.read_csv(notebook_path, index_col=0)
@@ -190,6 +192,8 @@ def transform_test_data(count_vect):
     cpuDataX = newVec.fit_transform(cpuData)
 
     return allDataX, cameraDataX, batteryDataX, screenDataX, cpuDataX
+
+# file: core_learning.py
 
 # returns pcaModel [type: PCA] (if not existed before pca_opt) and optimised array [type: sparse matrix]
 def pca_opt(sparseArray, pcaModel=None):
@@ -332,6 +336,8 @@ tk = tkinter.Tk()
 canvas = tkinter.Canvas(tk, width=1000, height=500)
 canvas.pack()
 tk.mainloop()'''
+
+# file: zosraje tu
 
 def learnAndTestOnEveryDatasetSeparately():
     read_test_data(test_data_path)
