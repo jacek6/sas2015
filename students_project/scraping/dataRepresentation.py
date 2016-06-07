@@ -49,8 +49,12 @@ class FeatureRating:
 
 
 class RatingDoc:
+    """
+    See doc: https://github.com/jacek6/sas2015/wiki/Docs---Scraping
+    """
     url = ''
     title = ''
+    date = ''
     rating = ''
     pros = ['']
     cons =['']
@@ -58,11 +62,20 @@ class RatingDoc:
     featuresRatings = [FeatureRating()]
     ratingDocUsable = RatingDocUsable()
 
+    def dict_me(self):
+        """
+        Na podstawie tego jest generowany json
+        """
+        dict = self.__dict__
+        dict['featuresRatings'] = [fr.__dict__ for fr in self.featuresRatings]
+        dict['ratingDocUsable'] = self.ratingDocUsable.__dict__
+        return  dict
 
     def __init__(self, div=None, url = ''):
         self.url = url
         if not div: return
         self.title = self.toText(div.find("h3", {"class" : "clear"}))
+        self.date = self.toText(div.find("span", {"class" : "s_date"}))
         self.rating = self.toText(div.find("span", {"class" : "s_rating_overal"}))
         self.pros = self.ulToLis(div.find("ul", {"class" : "s_pros_list"}))
         self.cons = self.ulToLis(div.find("ul", {"class" : "s_cons_list"}))
