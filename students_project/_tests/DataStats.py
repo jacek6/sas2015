@@ -4,7 +4,7 @@
 #@Author:PawełGrochowski
 #
 
-from KeyWords import KeyWords #@Local:../scraping
+from scraping.KeyWords import KeyWords #@Local:../scraping
 
 class DataStats():
     BROKEN = 'broken' # Sentences with multiple keywords or without rating.

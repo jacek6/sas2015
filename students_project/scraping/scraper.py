@@ -9,6 +9,7 @@ SENTENCES_DATA_FILENAME_PREFIX = "sentences_data"
 FILENAME_SUFIX = '.txt'
 
 SIMPLE_DATA_FILENAME_PREFIX = "simple_data"
+JSON_FILENAME_PREFIX = "json_data"
 
 phoneCodesFile = 'phonesCodes.txt'
 printDoing = True
@@ -74,6 +75,8 @@ class SentencesWriter(SimpleDataWriter):
         #file.write('\t')
         file.write(subsentence)
         file.write('\t')
+        file.write(ratingDoc.date)
+        file.write('\t')
         file.write(feature.ratingGainPoints)
         file.write('\n')
 
@@ -83,9 +86,19 @@ class SentencesWriter(SimpleDataWriter):
                 return feature
         return None
 
+class JsonWriter(SimpleDataWriter):
+    def __init__(self, base_filename=JSON_FILENAME_PREFIX):
+        SimpleDataWriter.__init__(self, base_filename)
 
-writers = [SimpleDataWriter()]
-writers2 = [SimpleDataWriter(), SentencesWriter()]
+    def write_to_file(self, ratingDoc, file):
+        file.write(json.dumps(ratingDoc.dict_me()))
+        file.write(',')
+        file.write('\n')
+        return
+
+
+#writers = [SimpleDataWriter()]
+#writers2 = [SimpleDataWriter(), SentencesWriter()]
 
 
 class ScrapingPhonesThread(threading.Thread):
@@ -128,12 +141,16 @@ def gen_phone_codes_from_json(phoneCodesFile='phones_links.json'):
             result.append(phoneCode)
     return result
 
-def mergeFiles(prefix, sufix, from_, to):
+def mergeFiles(prefix, sufix, from_, to, json_array=False):
     with open(prefix + sufix, 'wb') as target_file:
+        if json_array:
+            target_file.write('[\n')
         for i in range(from_, to):
             reading_filename = prefix + str(i) + sufix
             if not os.path.exists(reading_filename): continue
             append_file(reading_filename, target_file)
+        if json_array:
+            target_file.write('\n{}\n]\n')
     return
 
 
@@ -175,8 +192,9 @@ print "everything done fine"
 
 numThreads = 800
 
-mergeFiles('data/%s' % SIMPLE_DATA_FILENAME_PREFIX, FILENAME_SUFIX, 1, numThreads)
-mergeFiles('data/%s' % SENTENCES_DATA_FILENAME_PREFIX, FILENAME_SUFIX, 1, numThreads)
+#mergeFiles('data/%s' % SIMPLE_DATA_FILENAME_PREFIX, FILENAME_SUFIX, 1, numThreads)
+#mergeFiles('data/%s' % SENTENCES_DATA_FILENAME_PREFIX, FILENAME_SUFIX, 1, numThreads)
+mergeFiles('data/%s' % JSON_FILENAME_PREFIX, FILENAME_SUFIX, 1, numThreads, True)
 exit(0)
 
 phoneCodes = gen_phone_codes_from_json()
@@ -186,17 +204,24 @@ phoneCodesChunks = chunks(phoneCodes, len(phoneCodes) / numThreads)
 sufix_counter = 1
 threads = []
 for chunk in phoneCodesChunks:
-    thread_writers = [SimpleDataWriter(), SentencesWriter()]
+    #thread_writers = [SimpleDataWriter(), SentencesWriter()]
+    thread_writers = [JsonWriter()]
     thread = ScrapingPhonesThread(phoneCodes=chunk, filename_sufix=str(sufix_counter), writers=thread_writers)
     sufix_counter += 1
     thread.start()
     threads.append(thread)
 
+joined_threads = 0
 for thread in threads:
+    joined_threads += 1
     thread.join()
+    print 'joined thread %d ' % joined_threads
 
-mergeFiles('data/%s' % SIMPLE_DATA_FILENAME_PREFIX, FILENAME_SUFIX, 1, numThreads)
-mergeFiles('data/%s' % SENTENCES_DATA_FILENAME_PREFIX, FILENAME_SUFIX, 1, numThreads)
+print "JOINED ALL THREADS"
+
+#mergeFiles('data/%s' % SIMPLE_DATA_FILENAME_PREFIX, FILENAME_SUFIX, 1, numThreads)
+#mergeFiles('data/%s' % SENTENCES_DATA_FILENAME_PREFIX, FILENAME_SUFIX, 1, numThreads)
+mergeFiles('data/%s' % JSON_FILENAME_PREFIX, FILENAME_SUFIX, 1, numThreads, True)
 
 # t1 = ScrapingPhonesThread(phoneCodes = phoneCodesChunks[0], filename_sufix=str(1))
 # t1.start()

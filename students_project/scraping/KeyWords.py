@@ -21,7 +21,7 @@ class KeyWord:
 
 class KeyWords:
 
-    def __init__(self, filename='../slowa - klucz.txt'):
+    def __init__(self, filename='../data/keywords.txt'):
         self.words = []
         with open(filename) as file:
             for line in file:
