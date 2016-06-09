@@ -58,31 +58,71 @@ class TestClassifier:
     #     return y
 
     def plot_prep(ys, titles, metricss=None):
-        plt.close('all')
-        x = np.array([0,1,2,3,4])
-        my_xticks = ["camera","screen","battery","processor", "all"]
-        fig, axes = plt.subplots(nrows = 1, ncols = len(ys), sharex = True, figsize=(8*len(ys), 7)) #sharey = True
-        plt.setp(axes, xticks = x, xticklabels = my_xticks) #yticks=[0, 20, 40, 60, 80, 100]
-        fig.subplots_adjust(wspace=0.4)
-        print (type(fig))
 
-        i = 0
-        # jakby cos sie sypalo, to wywalic tego ifa i tego lima
-        plt.ylim([0, 100])
-        if len(ys) > 1:
-            for ax in axes:
-                if  metricss is not None:
-                    ax.set_xlabel('Kategoria'+'\n'+'Accuracy: %s, F1-measure: %s, Predicted: %s' % (round(metricss[i][0], 3), round(metricss[i][1], 3), round(metricss[i][2], 3)))
-                    ax.set_ylabel('Stopien zadowolenia [%]')
-                ax.set_title('Zadowolenie uzytkownikow z poszczegolnych komponentow telefonu.\n'+'Klasyfikator stworzono w oparciu o lableki z: '+titles[i]+'\n')
-                ax.bar(x, ys[i], 0.35, color='#F78205')
-                i += 1
-        else:
+        my_xticks = ["camera", "screen", "battery", "processor", "all"]
+        width = 0.2  # the width of the bars
+        if len(ys) == 3:
+
+            indtmp = np.arange(len(my_xticks))  # the x locations for the groups
+            ind = indtmp + 0.0
+
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+
+            colors = ['r', 'y', 'g']
+            fig.set_size_inches(15, 8, forward=True)
+
+            if  metricss is not None:
+                ax.set_xlabel(metricss)
+
+            ax.set_ylabel('Liczba poszczegolnych ocen')
+            ax.set_title('Liczba ocen (0, 1, 2) uzytkownikow dla poszczegolnych komponentow telefonu.\n'+'Klasyfikator stworzono w oparciu o lableki z: '+titles+'\n')
+            ax.set_xticks(indtmp + width)
+            ax.set_xticklabels(("camera", "screen", "battery", "processor", "all"))
+
+            rects0 = ax.bar(ind, ys[0], width, color=colors[0])
+            ind += width
+            rects1 = ax.bar(ind, ys[1], width, color=colors[1])
+            ind += width
+            rects2 = ax.bar(ind, ys[2], width, color=colors[2])
+            ax.legend((rects0[0], rects1[0], rects2[0]), ('negatywne', 'neutralne', 'pozytywne'))
+        elif len(ys) == 2:
+
+            indtmp = np.arange(len(my_xticks))  # the x locations for the groups
+            ind = indtmp + 0.0
+
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+
+            colors = ['r', 'g']
+            fig.set_size_inches(15, 8, forward=True)
+
             if metricss is not None:
-                axes.set_xlabel('Kategoria' + '\n' + 'Accuracy: %s, F1-measure: %s, Predicted: %s' % (round(metricss[i][0], 3), round(metricss[i][1], 3), round(metricss[i][2], 3)))
-                axes.set_ylabel('Stopien zadowolenia [%]')
-            axes.set_title('Zadowolenie uzytkownikow z poszczegolnych komponentow telefonu.\n' + 'Klasyfikator stworzono w oparciu o lableki z: ' +titles[0] + '\n')
-            axes.bar(x, ys[0], 0.35, color='#F78205')
+                ax.set_xlabel(metricss)
+
+            ax.set_ylabel('Liczba poszczegolnych ocen')
+            ax.set_title('Liczba ocen pozytywnych i negatywnych uzytkownikow dla poszczegolnych komponentow telefonu.\n' + 'Klasyfikator stworzono w oparciu o lableki z: ' + titles + '\n')
+            ax.set_xticks(indtmp + width)
+            ax.set_xticklabels(("camera", "screen", "battery", "processor", "all"))
+
+            rects0 = ax.bar(ind, ys[0], width, color=colors[0])
+            ind += width
+            rects1 = ax.bar(ind, ys[1], width, color=colors[1])
+            ax.legend((rects0[0], rects1[0]), ('negatywne', 'pozytywne'))
+
+        else:
+            x = np.array([0, 1, 2, 3, 4])
+
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            plt.setp(ax, xticks=x, xticklabels=my_xticks)
+            fig.set_size_inches(15, 8, forward=True)
+
+            if metricss is not None:
+                ax.set_xlabel(metricss)
+            ax.set_ylabel('Srednia ocena uzytkownika')
+            ax.set_title('\n'+'Srednie oceny uzytkownikow dla poszczegolnych komponentow telefonu.\n'+'Klasyfikator stworzono w oparciu o lableki z: '+titles+'\n')
+            ax.bar(x, ys, width+0.15, color='#F78205')
         plt.show()
 
     # def learnAndTestOnEveryDatasetSeparately():
@@ -175,6 +215,8 @@ class TestClassifier:
     # pierwszy etap: [1, [0, 2]=0]
     # drugi etap: if not neutral (1) then test: 0 or 2 (zamiast 2 wstawiam 1, bo sie klasyfikator wywala, a potem znowu konwertuje na 2...)
     # odrzucam na razie tweety, bo sa zbyt dlugie i trzeba by je jakos podzielic (?)
+
+
     def twoStageClassification(pocoargument=None):
 
         allData, cameraData, batteryData, screenData, cpuData = ReadData.read_test_data(TestClassifier.test_data_path)
@@ -266,6 +308,7 @@ class TestClassifier:
             print ("Etap pierwszy. Dlugosc danych uczacych: ", X1.shape[0])
             clf, metricss_ = CoreLearning.sentiment_classification_learning(X1, np.array(Y1), n_folds=15, classifier=linear_model.LogisticRegression())
             print ('Accuracy: %s, F1-measure: %s, Predicted: %s' % (round(metricss_[0], 3), round(metricss_[1], 3), round(metricss_[2], 3)))
+            metricss = 'Etap I: Accuracy: %s, F1-measure: %s, Predicted: %s' % (round(metricss_[0], 3), round(metricss_[1], 3), round(metricss_[2], 3))
 
             # [1, [0, 2]=0]
             allDataY1 = clf.predict(allDataX1)
@@ -309,6 +352,7 @@ class TestClassifier:
             print("Etap drugi. Dlugosc danych uczacych: ", X2.shape[0])
             clf, metricss_ = CoreLearning.sentiment_classification_learning(X2, np.array(Y2), n_folds=15, classifier=linear_model.LogisticRegression())
             print('Accuracy: %s, F1-measure: %s, Predicted: %s' % (round(metricss_[0], 3), round(metricss_[1], 3), round(metricss_[2], 3)))
+            metricss += '\nEtap II: Accuracy: %s, F1-measure: %s, Predicted: %s' % (round(metricss_[0], 3), round(metricss_[1], 3), round(metricss_[2], 3))
 
             # if not neutral (1) then test: 0 or 2 (zamiast 2 mam 1, bo inaczej sie klasyfikator wywala, a potem znowu konwertuje na 2...)
             allDataY2 = clf.predict(allDataX2)
@@ -324,8 +368,67 @@ class TestClassifier:
             screenDataYresults += [x*2 for x in screenDataY2.tolist()]
             cpuDataYresults += [x*2 for x in cpuDataY2.tolist()]
 
-            TestClassifier.plot_prep([[np.mean(cameraDataYresults)*50, np.mean(screenDataYresults)*50, np.mean(batteryDataYresults)*50, np.mean(cpuDataYresults)*50, np.mean(allDataYresults)*50]], ["Phonearena, imdb, amazon, yelp"])
+            TestClassifier.plot_prep([np.mean(cameraDataYresults), np.mean(screenDataYresults), np.mean(batteryDataYresults), np.mean(cpuDataYresults), np.mean(allDataYresults)], "Phonearena, imdb, amazon, yelp")
+
+            negposnut = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
+            results = [cameraDataYresults, screenDataYresults, batteryDataYresults, cpuDataYresults, allDataYresults]
+
+            for i in range(0, len(results)):
+                negposnut[0][i] = results[i].count(0)
+                negposnut[1][i] = results[i].count(1)
+                negposnut[2][i] = results[i].count(2)
+
+            TestClassifier.plot_prep(negposnut, "Phonearena, imdb, amazon, yelp", metricss)
+
+    def oneStageClassification(pocoargument=None, pcaopt=False):
+
+        allData, cameraData, batteryData, screenData, cpuData = ReadData.read_test_data(TestClassifier.test_data_path)
+
+        files = [[TestClassifier.amazon_labels_path, TestClassifier.data_types[1]],[TestClassifier.imdb_labels_path, TestClassifier.data_types[2]],[TestClassifier.yelp_labels_path, TestClassifier.data_types[3]]]
+        stats, docs, Y = ReadData.read_data_with_normalization(files, return_stats=True)
+        Y = [y/2 for y in Y.tolist()]
+
+        X, count_vect = ReadData.get_ngrams_and_countVect(docs)
+        allData, cameraData, batteryData, screenData, cpuData = ReadData.transform_test_data(count_vect, allData, cameraData, batteryData, screenData, cpuData)
+
+        if pcaopt:
+            pca_model, X = ReadData.pca_opt(X)
+            print ('1')
+            pca_model_tmp, allData = ReadData.pca_opt(allData, pca_model)
+            print('2')
+            pca_model_tmp, cameraData = ReadData.pca_opt(cameraData, pca_model)
+            print('3')
+            pca_model_tmp, batteryData = ReadData.pca_opt(batteryData, pca_model)
+            print('4')
+            pca_model_tmp, screenData  = ReadData.pca_opt(screenData, pca_model)
+            print('5')
+            pca_model_tmp, cpuData = ReadData.pca_opt(cpuData, pca_model)
+
+
+        print("Dlugosc danych uczacych: ", X.shape[0])
+        clf, metricss_ = CoreLearning.sentiment_classification_learning(X, np.array(Y), n_folds=15, classifier=linear_model.LogisticRegression())
+        print('Accuracy: %s, F1-measure: %s, Predicted: %s' % (round(metricss_[0], 3), round(metricss_[1], 3), round(metricss_[2], 3)))
+        metricss = 'Accuracy: %s, F1-measure: %s, Predicted: %s' % (round(metricss_[0], 3), round(metricss_[1], 3), round(metricss_[2], 3))
+
+        allDataYresults = clf.predict(allData).tolist()
+        cameraDataYresults = clf.predict(cameraData).tolist()
+        batteryDataYresults = clf.predict(batteryData).tolist()
+        screenDataYresults = clf.predict(screenData).tolist()
+        cpuDataYresults = clf.predict(cpuData).tolist()
+
+        TestClassifier.plot_prep([np.mean(cameraDataYresults), np.mean(screenDataYresults), np.mean(batteryDataYresults),np.mean(cpuDataYresults), np.mean(allDataYresults)], "Imdb, amazon, yelp")
+
+        negposnut = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
+        results = [cameraDataYresults, screenDataYresults, batteryDataYresults, cpuDataYresults, allDataYresults]
+
+        for i in range(0, len(results)):
+            negposnut[0][i] = results[i].count(0)
+            negposnut[1][i] = results[i].count(1)
+
+        TestClassifier.plot_prep(negposnut, "Imdb, amazon, yelp", metricss)
 
 
 if __name__ == '__main__':
     TestClassifier.twoStageClassification()
+    TestClassifier.oneStageClassification()
+    TestClassifier.oneStageClassification(pcaopt=True)
