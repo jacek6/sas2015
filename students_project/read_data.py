@@ -172,10 +172,14 @@ class ReadData:
     # file: core_learning.py
 
     # returns pcaModel [type: PCA] (if not existed before pca_opt) and optimised array [type: sparse matrix]
-    def pca_opt(sparseArray, pcaModel=None):
+    def pca_opt(sparseArray, pcaModel=None, svdopt=None):
         array = sparseArray.toarray()
         if pcaModel is None:
+            if svdopt is not None:
+                ReadData.svdOpt = svdopt
+            print (ReadData.svdOpt)
             newSize = len(array[0]) / ReadData.svdOpt
+            print(newSize)
             if len(array) < 3000:
                 pca = PCA(n_components=newSize)
                 Xtransformed = pca.fit_transform(array)

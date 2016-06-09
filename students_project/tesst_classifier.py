@@ -380,7 +380,7 @@ class TestClassifier:
 
             TestClassifier.plot_prep(negposnut, "Phonearena, imdb, amazon, yelp", metricss)
 
-    def oneStageClassification(pocoargument=None, pcaopt=False):
+    def oneStageClassification(pcaopt=False, svdopt=None):
 
         allData, cameraData, batteryData, screenData, cpuData = ReadData.read_test_data(TestClassifier.test_data_path)
 
@@ -392,7 +392,7 @@ class TestClassifier:
         allData, cameraData, batteryData, screenData, cpuData = ReadData.transform_test_data(count_vect, allData, cameraData, batteryData, screenData, cpuData)
 
         if pcaopt:
-            pca_model, X = ReadData.pca_opt(X)
+            pca_model, X = ReadData.pca_opt(X, svdopt=svdopt)
             print ('1')
             pca_model_tmp, allData = ReadData.pca_opt(allData, pca_model)
             print('2')
@@ -432,3 +432,4 @@ if __name__ == '__main__':
     TestClassifier.twoStageClassification()
     TestClassifier.oneStageClassification()
     TestClassifier.oneStageClassification(pcaopt=True)
+    TestClassifier.oneStageClassification(pcaopt=True, svdopt=100)
