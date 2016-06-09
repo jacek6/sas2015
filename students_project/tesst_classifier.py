@@ -380,7 +380,7 @@ class TestClassifier:
 
             TestClassifier.plot_prep(negposnut, "Phonearena, imdb, amazon, yelp", metricss)
 
-    def oneStageClassification(pocoargument=None):
+    def oneStageClassification(pocoargument=None, pcaopt=False):
 
         allData, cameraData, batteryData, screenData, cpuData = ReadData.read_test_data(TestClassifier.test_data_path)
 
@@ -390,6 +390,20 @@ class TestClassifier:
 
         X, count_vect = ReadData.get_ngrams_and_countVect(docs)
         allData, cameraData, batteryData, screenData, cpuData = ReadData.transform_test_data(count_vect, allData, cameraData, batteryData, screenData, cpuData)
+
+        if pcaopt:
+            pca_model, X = ReadData.pca_opt(X)
+            print ('1')
+            pca_model_tmp, allData = ReadData.pca_opt(allData, pca_model)
+            print('2')
+            pca_model_tmp, cameraData = ReadData.pca_opt(cameraData, pca_model)
+            print('3')
+            pca_model_tmp, batteryData = ReadData.pca_opt(batteryData, pca_model)
+            print('4')
+            pca_model_tmp, screenData  = ReadData.pca_opt(screenData, pca_model)
+            print('5')
+            pca_model_tmp, cpuData = ReadData.pca_opt(cpuData, pca_model)
+
 
         print("Dlugosc danych uczacych: ", X.shape[0])
         clf, metricss_ = CoreLearning.sentiment_classification_learning(X, np.array(Y), n_folds=15, classifier=linear_model.LogisticRegression())
@@ -417,3 +431,4 @@ class TestClassifier:
 if __name__ == '__main__':
     TestClassifier.twoStageClassification()
     TestClassifier.oneStageClassification()
+    TestClassifier.oneStageClassification(pcaopt=True)

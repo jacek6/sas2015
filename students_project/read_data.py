@@ -116,9 +116,9 @@ class ReadData:
                             except:
                                 pass
         Y = np.array(y)
-        print("Liczba pozytywnych, neutrealnych i negatywnych zdan dla phonearena: ", positive_counter, ' ',
+        print("Liczba pozytywnych, neutralnych i negatywnych zdan dla phonearena: ", positive_counter, ' ',
               neutral_counter, ' ', negative_counter)
-        print("Liczba pozytywnych, neutrealnych i negatywnych zdan dla wszystkich danych: ",
+        print("Liczba pozytywnych, neutralnych i negatywnych zdan dla wszystkich danych: ",
               positive_counter_all + positive_counter, ' ', neutral_counter, ' ',
               negative_counter_all + negative_counter)
         if return_stats:
@@ -176,13 +176,14 @@ class ReadData:
         array = sparseArray.toarray()
         if pcaModel is None:
             newSize = len(array[0]) / ReadData.svdOpt
-            if len(array) < 2900:
+            if len(array) < 3000:
                 pca = PCA(n_components=newSize)
                 Xtransformed = pca.fit_transform(array)
                 Xtransformed = sparse.csr_matrix(Xtransformed)
             else:
-                chunkSize = 2000
-                chunks = [array[i:i + chunkSize] for i in range(0, len(array), chunkSize)]
+                chunkSize = 20
+                iter = int(len(array)/chunkSize)
+                chunks = [array[i:i + chunkSize] for i in range(0, iter*chunkSize, chunkSize)]
                 pca = IncrementalPCA(n_components=newSize)
 
                 for chunk in chunks:
